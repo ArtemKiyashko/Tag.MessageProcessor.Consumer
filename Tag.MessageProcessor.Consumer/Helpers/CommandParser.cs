@@ -1,3 +1,4 @@
+using Tag.MessageProcessor.Consumer.ViewModels;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 
@@ -5,11 +6,11 @@ namespace Tag.MessageProcessor.Consumer.Helpers;
 
 public static class CommandParser
 {
-    public static TgCommand? GetTgCommand(Update tgUpdate, string botName)
+    public static TgCommand? GetTgCommand(BotTgUpdate tgUpdate)
     {
         switch (tgUpdate.Type){
             case UpdateType.Message:
-                return tgUpdate.Message.GetMessageCommand(botName);
+                return tgUpdate.Message.GetMessageCommand(tgUpdate.BotUsername);
             default: return default;
         }
     }
