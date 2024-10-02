@@ -6,5 +6,6 @@ public enum TgCommandTypes
     NewChat,
     RemoveChat,
     GenerateAvatar,
-    NewTitle
+    NewTitle,
+    PrivateChat
 }

@@ -6,6 +6,8 @@ namespace Tag.MessageProcessor.Repositories;
 
 internal interface IChatRepository
 {
-    Task<ChatEntity> GetChatById(long id);
+    Task<ChatEntity?> GetChatById(long id);
     Task UpsertChat(ChatEntity chatEntity);
+    Task UpdateChat(ChatEntity chatEntity);
+    Task InsertChat(ChatEntity chatEntity);
 }

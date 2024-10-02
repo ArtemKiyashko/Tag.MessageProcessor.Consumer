@@ -9,5 +9,6 @@ public class BaseEntity : ITableEntity
     public required string RowKey { get; set; }
     public DateTimeOffset? Timestamp { get; set; }
     public ETag ETag { get; set; }
-    public bool isEnabled { get; set; } = true;
+    public bool IsDeleted { get; set; } = false;
+    public bool Disabled { get; set; } = false;
 }

@@ -5,6 +5,7 @@ using Microsoft.Extensions.Configuration;
 using Tag.MessageProcessor.Managers;
 using Tag.MessageProcessor.Managers.Extensions;
 using Telegram.Bot;
+using Microsoft.Extensions.Logging;
 
 IConfiguration _functionConfig;
 ChatOptions _chatOptions = new();
@@ -26,6 +27,18 @@ var host = new HostBuilder()
         services.AddSingleton<ITelegramBotClient>(factory => {
             var botToken = _functionConfig.GetValue<string>("TELEGRAM_BOT_TOKEN") ?? throw new ArgumentException("Bot token required", "TELEGRAM_BOT_TOKEN");
             return new TelegramBotClient(botToken);
+        });
+
+        //ref: https://github.com/devops-circle/Azure-Functions-Logging-Tests/blob/master/Func.Isolated.Net7.With.AI/Program.cs#L46
+        services.Configure<LoggerFilterOptions>(options =>
+        {
+            var toRemove = options.Rules.FirstOrDefault(rule => rule.ProviderName
+                == "Microsoft.Extensions.Logging.ApplicationInsights.ApplicationInsightsLoggerProvider");
+
+            if (toRemove is not null)
+            {
+                options.Rules.Remove(toRemove);
+            }
         });
         
     })

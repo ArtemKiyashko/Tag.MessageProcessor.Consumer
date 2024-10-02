@@ -5,5 +5,7 @@ namespace Tag.MessageProcessor.Managers;
 
 public interface IChatManager
 {
-    Task UpsertChat(ChatDto chatDto);
+    Task InsertChat(ChatDto chatDto);
+    Task UpdateChatTitle(ChatDto chatDto);
+    Task DeleteChat(long chatId);
 }

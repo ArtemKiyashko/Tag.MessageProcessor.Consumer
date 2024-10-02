@@ -2,6 +2,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Tag.MessageProcessor.Repositories\Tag.MessageProcessor.Repositories.csproj" />
+    <ProjectReference Include="..\Tag.MessageProcessor.Helpers\Tag.MessageProcessor.Helpers.csproj" />
   </ItemGroup>
 
   <ItemGroup>

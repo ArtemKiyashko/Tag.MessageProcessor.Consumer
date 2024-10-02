@@ -6,14 +6,11 @@ namespace Tag.MessageProcessor.Consumer.Helpers;
 
 public static class CommandParser
 {
-    public static TgCommand? GetTgCommand(BotTgUpdate tgUpdate)
+    public static TgCommand? GetTgCommand(BotTgUpdate tgUpdate) => tgUpdate.Type switch
     {
-        switch (tgUpdate.Type){
-            case UpdateType.Message:
-                return tgUpdate.Message.GetMessageCommand(tgUpdate.BotUsername);
-            default: return default;
-        }
-    }
+        UpdateType.Message => tgUpdate.Message.GetMessageCommand(tgUpdate.BotUsername),
+        _ => default,
+    };
 
     public static TgCommand? GetMessageCommand(this Message? tgMessage, string botName)
     {
@@ -22,8 +19,17 @@ public static class CommandParser
         var commandRawTuple = tgMessage.GetMessageCommandRaw(botName);
         if (!commandRawTuple.HasValue)
             return default;
+        
+        if (tgMessage.Chat.Type == ChatType.Private || tgMessage.Chat.Type == ChatType.Sender)
+            return new TgCommand(TgCommandTypes.PrivateChat, commandRawTuple.Value.name, commandRawTuple.Value.arguments);
+
         var messageCommandType = GetMessageCommandType(commandRawTuple.Value.name);
-        return new TgCommand(messageCommandType, commandRawTuple.Value.name, commandRawTuple.Value.arguments);
+
+        return messageCommandType switch
+        {
+            TgCommandTypes.NewChat => new TgCommand(messageCommandType, commandRawTuple.Value.name, commandRawTuple.Value.arguments),
+            _ => default,
+        };
     }
 
     public static (string name, string arguments)? GetMessageCommandRaw(this Message tgMessage, string botName)

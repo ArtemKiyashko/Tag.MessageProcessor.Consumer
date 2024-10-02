@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tag.MessageProcessor.Manage
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tag.MessageProcessor.Repositories", "Tag.MessageProcessor.Repositories\Tag.MessageProcessor.Repositories.csproj", "{E0D15C32-92CC-4A6E-AEEE-FB87B5BD627A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tag.MessageProcessor.Helpers", "Tag.MessageProcessor.Helpers\Tag.MessageProcessor.Helpers.csproj", "{A71B66DA-891E-4112-B1FA-41AB5EDBB827}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{E0D15C32-92CC-4A6E-AEEE-FB87B5BD627A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E0D15C32-92CC-4A6E-AEEE-FB87B5BD627A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E0D15C32-92CC-4A6E-AEEE-FB87B5BD627A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A71B66DA-891E-4112-B1FA-41AB5EDBB827}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A71B66DA-891E-4112-B1FA-41AB5EDBB827}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A71B66DA-891E-4112-B1FA-41AB5EDBB827}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A71B66DA-891E-4112-B1FA-41AB5EDBB827}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

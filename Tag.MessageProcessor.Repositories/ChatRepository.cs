@@ -1,18 +1,26 @@
 ﻿using Azure.Data.Tables;
+using Tag.MessageProcessor.Helpers.Extensions;
 using Tag.MessageProcessor.Repositories.Entities;
 
 namespace Tag.MessageProcessor.Repositories;
 
-internal class ChatRepository : IChatRepository
+internal class ChatRepository(TableClient tableClient) : IChatRepository
 {
-    private readonly TableClient _tableClient;
+    private readonly TableClient _tableClient = tableClient;
 
-    public ChatRepository(TableClient tableClient)
+    public async Task<ChatEntity?> GetChatById(long id)
     {
-        _tableClient = tableClient;
+        var (rowKey, partitionKey) = HashExtensions.GetEntityKeyData(id);
+        var entity = await _tableClient.GetEntityIfExistsAsync<ChatEntity>(partitionKey, rowKey);
+        return entity.HasValue ? entity.Value : default;
     }
 
-    public Task<ChatEntity> GetChatById(long id)
+    public Task InsertChat(ChatEntity chatEntity)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task UpdateChat(ChatEntity chatEntity)
     {
         throw new NotImplementedException();
     }
