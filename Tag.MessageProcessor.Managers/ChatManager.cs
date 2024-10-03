@@ -25,7 +25,9 @@ internal class ChatManager(IChatRepository chatRepository, IChatTitleRepository 
         var existingChat = await _chatRepository.GetChatById(chatDto.ChatTgId);
         if (existingChat is not null)
         {
-            await RecoverChat(existingChat);
+            existingChat.Title = chatDto.Title;
+            existingChat.IsDeleted = false;
+            await _chatRepository.UpdateChat(existingChat);
             return;
         }
 
@@ -40,14 +42,6 @@ internal class ChatManager(IChatRepository chatRepository, IChatTitleRepository 
         };
 
         await _chatRepository.InsertChat(newChat);
-    }
-
-    private async Task RecoverChat(ChatEntity existingChat)
-    {
-        if (!existingChat.IsDeleted)
-            return;
-        existingChat.IsDeleted = false;
-        await _chatRepository.UpdateChat(existingChat);
     }
 
     public async Task UpdateChatTitle(ChatDto chatDto)

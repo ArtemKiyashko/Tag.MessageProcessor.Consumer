@@ -31,7 +31,7 @@ public static class ServiceCollectionExtensions
             tableClient.CreateIfNotExists();
             return new ChatRepository(tableClient);
         });
-        services.AddScoped<IChatTitleRepository, ChatTitleRepository>((builder) =>
+        services.AddSingleton<IChatTitleRepository, ChatTitleRepository>((builder) =>
         {
             var tableServiceClient = builder.GetRequiredService<TableServiceClient>();
             var tableClient = tableServiceClient.GetTableClient(chatOptions.ChatTitleTable);
@@ -60,6 +60,9 @@ public static class ServiceCollectionExtensions
             clientBuilder
                 .AddClient<ServiceBusSender, ServiceBusClientOptions>((_, _, provider) => provider.GetRequiredService<ServiceBusClient>().CreateSender(_generateRequestOptions.TopicName));
         });
+
+        services.AddSingleton<IGenerateRequestRepository, GenerateRequestRepository>();
+        services.AddSingleton<IGenerateRequestManager, GenerateRequestManager>();
 
         return services;
     }

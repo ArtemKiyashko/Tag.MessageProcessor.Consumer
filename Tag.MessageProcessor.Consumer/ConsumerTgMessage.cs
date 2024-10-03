@@ -8,11 +8,16 @@ using Telegram.Bot;
 
 namespace Tag.MessageProcessor.Consumer
 {
-    public class ConsumerTgMessage(ILogger<ConsumerTgMessage> logger, ITelegramBotClient telegramBotClient, IChatManager chatManager)
+    public class ConsumerTgMessage(
+        ILogger<ConsumerTgMessage> logger, 
+        ITelegramBotClient telegramBotClient, 
+        IChatManager chatManager,
+        IGenerateRequestManager generateRequestManager)
     {
         private readonly ILogger<ConsumerTgMessage> _logger = logger;
         private readonly ITelegramBotClient _telegramBotClient = telegramBotClient;
         private readonly IChatManager _chatManager = chatManager;
+        private readonly IGenerateRequestManager _generateRequestManager = generateRequestManager;
 
         [Function(nameof(ConsumerTgMessage))]
         public async Task Run(
@@ -38,19 +43,65 @@ namespace Tag.MessageProcessor.Consumer
             switch (command.CommandType)
             {
                 case TgCommandTypes.NewChat:
-                    await _chatManager.InsertChat(chatDto);
+                    await HandleNewChat(chatDto);
                     break;
                 case TgCommandTypes.NewTitle:
-                    await _chatManager.UpdateChatTitle(chatDto);
-                    break;
-                case TgCommandTypes.PrivateChat:
-                    await _telegramBotClient.SendTextMessageAsync(tgUpdate.Message.Chat.Id, "Add me to the group and set chat manager permissions");
+                    await HandleNewTitle(chatDto);
                     break;
                 case TgCommandTypes.CustomPrompt:
-                    await _chatManager.SetCustomPromptToChat(chatDto, command.TgCommandArguments);
+                    await HandleCustomPrompt(command, chatDto);
                     break;
-
+                case TgCommandTypes.PrivateChat:
+                    await _telegramBotClient.SendTextMessageAsync(chatDto.ChatTgId, "Добавть меня в групповой чат и выдай разрешение на упраление чатом, чтобы я мог менять аватарки :)");
+                    break;
+                case TgCommandTypes.GenerateAvatar:
+                    await HandleGenerate(chatDto);
+                    break;
             }
+        }
+
+        private async Task HandleGenerate(ChatDto chatDto)
+        {
+            var chatRequested = await _generateRequestManager.EnqueueGenerateRequest(chatDto.ChatTgId);
+            if (chatRequested is null)
+                return;
+            await _telegramBotClient.SendTextMessageAsync(chatDto.ChatTgId,
+                $"Запустил генерацию для текущего названия [{chatRequested.AlternativePrompt ?? chatRequested.Title}]");
+        }
+
+        private async Task HandleCustomPrompt(TgCommand command, ChatDto chatDto)
+        {
+            if (string.IsNullOrEmpty(command.TgCommandArguments) || command.TgCommandArguments.Length < 3)
+            {
+                await _telegramBotClient.SendTextMessageAsync(chatDto.ChatTgId, $"[{command.TgCommandArguments}] слишком короткий промпт");
+                return;
+            }
+            await _chatManager.SetCustomPromptToChat(chatDto, command.TgCommandArguments);
+            var chatRequested = await _generateRequestManager.EnqueueGenerateRequest(chatDto.ChatTgId);
+            if (chatRequested is null)
+                return;
+            await _telegramBotClient.SendTextMessageAsync(chatDto.ChatTgId,
+                $"Альтернативный промпт для названия [{chatDto.Title}]: {chatRequested.AlternativePrompt}\nЗапустил генерацию...");
+        }
+
+        private async Task HandleNewChat(ChatDto chatDto)
+        {
+            await _chatManager.InsertChat(chatDto);
+            var chatRequested = await _generateRequestManager.EnqueueGenerateRequest(chatDto.ChatTgId);
+            if (chatRequested is null)
+                return;
+            await _telegramBotClient.SendTextMessageAsync(chatDto.ChatTgId,
+                $"Привет! Я буду автоматически генерировать аватарки для чата используя в качестве промпта его название. Я только что поставил в очередь новую генерацию [{chatRequested.AlternativePrompt ?? chatRequested.Title}]. Ожидайте...");
+        }
+
+        private async Task HandleNewTitle(ChatDto chatDto)
+        {
+            await _chatManager.UpdateChatTitle(chatDto);
+            var chatRequested = await _generateRequestManager.EnqueueGenerateRequest(chatDto.ChatTgId);
+            if (chatRequested is null)
+                return;
+            await _telegramBotClient.SendTextMessageAsync(chatDto.ChatTgId,
+                $"Обнаружено новое название чата. Начал генерацию аватарки [{chatRequested.AlternativePrompt ?? chatRequested.Title}]");
         }
     }
 }

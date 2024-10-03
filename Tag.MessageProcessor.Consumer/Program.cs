@@ -25,6 +25,7 @@ var host = new HostBuilder()
         _functionConfig.GetSection(nameof(GenerateRequestOptions)).Bind(_generateRequestOptions);
 
         services.AddChatManager(_chatOptions);
+        services.AddGenerateRequestManager(_generateRequestOptions);
         services.AddSingleton<ITelegramBotClient>(factory => {
             var botToken = _functionConfig.GetValue<string>("TELEGRAM_BOT_TOKEN") ?? throw new ArgumentException("Bot token required", "TELEGRAM_BOT_TOKEN");
             return new TelegramBotClient(botToken);
