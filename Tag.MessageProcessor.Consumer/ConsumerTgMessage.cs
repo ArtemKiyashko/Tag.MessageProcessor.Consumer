@@ -2,15 +2,17 @@ using Azure.Messaging.ServiceBus;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
 using Tag.MessageProcessor.Consumer.Helpers;
+using Tag.MessageProcessor.Consumer.ViewModels;
 using Tag.MessageProcessor.Managers;
 using Tag.MessageProcessor.Managers.Dtos;
 using Telegram.Bot;
+using Telegram.Bot.Exceptions;
 
 namespace Tag.MessageProcessor.Consumer
 {
     public class ConsumerTgMessage(
-        ILogger<ConsumerTgMessage> logger, 
-        ITelegramBotClient telegramBotClient, 
+        ILogger<ConsumerTgMessage> logger,
+        ITelegramBotClient telegramBotClient,
         IChatManager chatManager,
         IGenerateRequestManager generateRequestManager)
     {
@@ -25,38 +27,44 @@ namespace Tag.MessageProcessor.Consumer
             ServiceBusReceivedMessage message, ServiceBusMessageActions messageActions)
         {
             var bot = await _telegramBotClient.GetMeAsync();
-
             var tgUpdate = await MessageValidator.TryGetBotTgUpdate(message, messageActions, bot);
-
-            var command = CommandParser.GetTgCommand(tgUpdate);
-
-            // ignore if it is not a direct command
-            if (command is null)
+            var tgData = CommandParser.GetTgData(tgUpdate);
+            if (tgData is null)
                 return;
 
             var chatDto = new ChatDto
             {
-                Title = tgUpdate.Message.Chat.Title,
-                ChatTgId = tgUpdate.Message.Chat.Id
+                Title = tgData.ChatTitle,
+                ChatTgId = tgData.ChatTgId
             };
 
-            switch (command.CommandType)
+            try
             {
-                case TgCommandTypes.NewChat:
-                    await HandleNewChat(chatDto);
-                    break;
-                case TgCommandTypes.NewTitle:
-                    await HandleNewTitle(chatDto);
-                    break;
-                case TgCommandTypes.CustomPrompt:
-                    await HandleCustomPrompt(command, chatDto);
-                    break;
-                case TgCommandTypes.PrivateChat:
-                    await _telegramBotClient.SendTextMessageAsync(chatDto.ChatTgId, "Добавть меня в групповой чат и выдай разрешение на упраление чатом, чтобы я мог менять аватарки :)");
-                    break;
-                case TgCommandTypes.GenerateAvatar:
-                    await HandleGenerate(chatDto);
-                    break;
+                switch (tgData.TgCommand.CommandType)
+                {
+                    case TgCommandTypes.NewChat:
+                        await HandleNewChat(chatDto);
+                        break;
+                    case TgCommandTypes.NewTitle:
+                        await HandleNewTitle(chatDto);
+                        break;
+                    case TgCommandTypes.CustomPrompt:
+                        await HandleCustomPrompt(tgData.TgCommand, chatDto);
+                        break;
+                    case TgCommandTypes.PrivateChat:
+                        await _telegramBotClient.SendTextMessageAsync(chatDto.ChatTgId, "Добавть меня в групповой чат и выдай разрешение на упраление чатом, чтобы я мог менять аватарки :)");
+                        break;
+                    case TgCommandTypes.GenerateAvatar:
+                        await HandleGenerate(chatDto);
+                        break;
+                    case TgCommandTypes.RemoveChat:
+                        await _chatManager.DeleteChat(chatDto.ChatTgId);
+                        break;
+                }
+            }
+            catch (ApiRequestException ex) when (ex.ErrorCode == 403)
+            {
+                await _chatManager.DeleteChat(chatDto.ChatTgId);
             }
         }
 
@@ -81,7 +89,7 @@ namespace Tag.MessageProcessor.Consumer
             if (chatRequested is null)
                 return;
             await _telegramBotClient.SendTextMessageAsync(chatDto.ChatTgId,
-                $"Альтернативный промпт для названия [{chatDto.Title}]: {chatRequested.AlternativePrompt}\nЗапустил генерацию...");
+                $"Альтернативный промпт для названия [{chatDto.Title}]: [{chatRequested.AlternativePrompt}]\nЗапустил генерацию...");
         }
 
         private async Task HandleNewChat(ChatDto chatDto)

@@ -1,4 +1,4 @@
-namespace Tag.MessageProcessor.Consumer.Helpers;
+namespace Tag.MessageProcessor.Consumer.ViewModels;
 
 public enum TgCommandTypes
 {

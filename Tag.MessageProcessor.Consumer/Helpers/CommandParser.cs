@@ -6,35 +6,68 @@ namespace Tag.MessageProcessor.Consumer.Helpers;
 
 public static class CommandParser
 {
-    public static TgCommand? GetTgCommand(BotTgUpdate tgUpdate) => tgUpdate.Type switch
+    public static TgData? GetTgData(BotTgUpdate tgUpdate) => tgUpdate.Type switch
     {
-        UpdateType.Message => tgUpdate.Message.GetMessageCommand(tgUpdate.BotUsername),
+        UpdateType.Message => tgUpdate.Message.GetMessageData(tgUpdate.BotUsername),
+        UpdateType.MyChatMember => tgUpdate.MyChatMember.GetChatMemberData(tgUpdate.BotUsername),
         _ => default,
     };
 
-    public static TgCommand? GetMessageCommand(this Message? tgMessage, string botName)
+    public static TgData? GetChatMemberData(this ChatMemberUpdated? chatMemberUpdated, string botName)
+    {
+        if (chatMemberUpdated is null || botName is null)
+            return default;
+        
+        if (!botName.Equals(chatMemberUpdated.NewChatMember.User.Username, StringComparison.OrdinalIgnoreCase))
+            return default;
+        
+        TgCommand? tgCommand = default;
+
+        if (chatMemberUpdated.NewChatMember.Status == ChatMemberStatus.Left ||
+            chatMemberUpdated.NewChatMember.Status == ChatMemberStatus.Kicked ||
+            chatMemberUpdated.NewChatMember.Status == ChatMemberStatus.Restricted)
+            tgCommand = new TgCommand(TgCommandTypes.RemoveChat, null, null);
+        
+        if (chatMemberUpdated.NewChatMember.Status == ChatMemberStatus.Member)
+            tgCommand = new TgCommand(TgCommandTypes.NewChat, null, null);
+        
+        if (tgCommand is null)
+            return default;
+
+        return new TgData(tgCommand, chatMemberUpdated.Chat.Title, chatMemberUpdated.Chat.Id);
+    }
+    public static TgData? GetMessageData(this Message? tgMessage, string botName)
     {
         if (tgMessage is null)
             return default;
 
         if (!string.IsNullOrEmpty(tgMessage.NewChatTitle))
-            return new TgCommand(TgCommandTypes.NewTitle, null, tgMessage.NewChatTitle);
+            return new TgData(
+                new TgCommand(TgCommandTypes.NewTitle, null, tgMessage.NewChatTitle),
+                tgMessage.NewChatTitle,
+                tgMessage.Chat.Id);
 
-        var commandRawTuple = tgMessage.GetMessageCommandRaw(botName);
-        if (!commandRawTuple.HasValue)
+        var commandTuple = tgMessage.GetMessageCommand(botName);
+        if (!commandTuple.HasValue)
             return default;
 
         if (tgMessage.Chat.Type == ChatType.Private || tgMessage.Chat.Type == ChatType.Sender)
-            return new TgCommand(TgCommandTypes.PrivateChat, commandRawTuple.Value.name, commandRawTuple.Value.arguments);
+            return new TgData(
+                new TgCommand(TgCommandTypes.PrivateChat, commandTuple.Value.name, commandTuple.Value.arguments),
+                tgMessage.Chat.Title,
+                tgMessage.Chat.Id);
 
-        var messageCommandType = GetMessageCommandType(commandRawTuple.Value.name);
+        var messageCommandType = GetMessageCommandType(commandTuple.Value.name);
 
         return messageCommandType == TgCommandTypes.Unknown ? 
             default : 
-            new TgCommand(messageCommandType, commandRawTuple.Value.name, commandRawTuple.Value.arguments);
+            new TgData(
+                new TgCommand(messageCommandType, commandTuple.Value.name, commandTuple.Value.arguments),
+                tgMessage.Chat.Title,
+                tgMessage.Chat.Id);
     }
 
-    public static (string name, string arguments)? GetMessageCommandRaw(this Message tgMessage, string botName)
+    public static (string name, string arguments)? GetMessageCommand(this Message tgMessage, string botName)
     {
         var botCommand = tgMessage.Entities?.FirstOrDefault(e => e.Type == MessageEntityType.BotCommand);
         if (botCommand is null)
