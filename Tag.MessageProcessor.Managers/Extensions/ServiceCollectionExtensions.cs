@@ -1,5 +1,6 @@
 using Azure.Data.Tables;
 using Azure.Identity;
+using Azure.Messaging.ServiceBus;
 using Microsoft.Extensions.Azure;
 using Microsoft.Extensions.DependencyInjection;
 using Tag.MessageProcessor.Repositories;
@@ -37,6 +38,29 @@ public static class ServiceCollectionExtensions
             tableClient.CreateIfNotExists();
             return new ChatTitleRepository(tableClient);
         });
+
+        services.AddSingleton<IChatManager, ChatManager>();
+        return services;
+    }
+
+    public static IServiceCollection AddGenerateRequestManager(this IServiceCollection services, GenerateRequestOptions _generateRequestOptions)
+    {
+        services.AddAzureClients(clientBuilder =>
+        {
+            clientBuilder.UseCredential(new ManagedIdentityCredential());
+            if (!string.IsNullOrEmpty(_generateRequestOptions.ServiceBusNamespace))
+                clientBuilder.AddServiceBusClientWithNamespace(_generateRequestOptions.ServiceBusNamespace);
+            else
+            {
+                if (string.IsNullOrEmpty(_generateRequestOptions.ServiceBusConnectionString))
+                    throw new ArgumentNullException(nameof(_generateRequestOptions.ServiceBusConnectionString), $"{nameof(_generateRequestOptions.ServiceBusNamespace)} or {nameof(_generateRequestOptions.ServiceBusConnectionString)} required");
+                clientBuilder.AddServiceBusClient(_generateRequestOptions.ServiceBusConnectionString);
+            }
+
+            clientBuilder
+                .AddClient<ServiceBusSender, ServiceBusClientOptions>((_, _, provider) => provider.GetRequiredService<ServiceBusClient>().CreateSender(_generateRequestOptions.TopicName));
+        });
+
         return services;
     }
 }

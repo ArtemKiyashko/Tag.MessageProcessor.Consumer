@@ -15,8 +15,7 @@ public static class MessageValidator
             var tgUpdate = JsonConvert.DeserializeObject<BotTgUpdate>(message.Body.ToString())
                 ?? throw new ArgumentException("Cannot deserialize message body as telegram Update", nameof(message));
 
-            if (bot.Username is null)
-                throw new ArgumentException("Bot username cannot be null", nameof(bot));
+            ArgumentNullException.ThrowIfNull(bot.Username);
 
             tgUpdate.BotUsername = bot.Username;
 

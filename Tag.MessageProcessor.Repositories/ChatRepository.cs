@@ -12,21 +12,12 @@ internal class ChatRepository(TableClient tableClient) : IChatRepository
     {
         var (rowKey, partitionKey) = HashExtensions.GetEntityKeyData(id);
         var entity = await _tableClient.GetEntityIfExistsAsync<ChatEntity>(partitionKey, rowKey);
-        return entity.HasValue ? entity.Value : default;
+        return entity.HasValue && !entity.Value.Disabled ? entity.Value : default;
     }
 
-    public Task InsertChat(ChatEntity chatEntity)
-    {
-        throw new NotImplementedException();
-    }
+    public Task InsertChat(ChatEntity chatEntity) => _tableClient.AddEntityAsync(chatEntity);
 
-    public Task UpdateChat(ChatEntity chatEntity)
-    {
-        throw new NotImplementedException();
-    }
+    public Task UpdateChat(ChatEntity chatEntity) => _tableClient.UpdateEntityAsync(chatEntity, chatEntity.ETag, TableUpdateMode.Merge);
 
-    public Task UpsertChat(ChatEntity chatEntity)
-    {
-        throw new NotImplementedException();
-    }
+    public Task UpsertChat(ChatEntity chatEntity) => _tableClient.UpsertEntityAsync(chatEntity, TableUpdateMode.Merge);
 }

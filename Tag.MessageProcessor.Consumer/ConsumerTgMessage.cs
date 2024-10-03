@@ -25,6 +25,7 @@ namespace Tag.MessageProcessor.Consumer
 
             var command = CommandParser.GetTgCommand(tgUpdate);
 
+            // ignore if it is not a direct command
             if (command is null)
                 return;
 
@@ -45,6 +46,10 @@ namespace Tag.MessageProcessor.Consumer
                 case TgCommandTypes.PrivateChat:
                     await _telegramBotClient.SendTextMessageAsync(tgUpdate.Message.Chat.Id, "Add me to the group and set chat manager permissions");
                     break;
+                case TgCommandTypes.CustomPrompt:
+                    await _chatManager.SetCustomPromptToChat(chatDto, command.TgCommandArguments);
+                    break;
+
             }
         }
     }

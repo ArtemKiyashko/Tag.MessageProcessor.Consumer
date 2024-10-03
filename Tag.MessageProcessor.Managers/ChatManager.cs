@@ -1,7 +1,5 @@
-﻿using System.Security.Cryptography;
-using Tag.MessageProcessor.Helpers.Extensions;
+﻿using Tag.MessageProcessor.Helpers.Extensions;
 using Tag.MessageProcessor.Managers.Dtos;
-using Tag.MessageProcessor.Managers.Extensions;
 using Tag.MessageProcessor.Repositories;
 using Tag.MessageProcessor.Repositories.Entities;
 
@@ -27,24 +25,27 @@ internal class ChatManager(IChatRepository chatRepository, IChatTitleRepository 
         var existingChat = await _chatRepository.GetChatById(chatDto.ChatTgId);
         if (existingChat is not null)
         {
-            await EnableChat(existingChat);
+            await RecoverChat(existingChat);
             return;
         }
 
-        var keyData = HashExtensions.GetEntityKeyData(chatDto.ChatTgId);
+        var (rowKey, partitionKey) = HashExtensions.GetEntityKeyData(chatDto.ChatTgId);
         var newChat = new ChatEntity
         {
-            RowKey = keyData.rowKey,
-            PartitionKey = keyData.partitionKey,
+            RowKey = rowKey,
+            PartitionKey = partitionKey,
             Title = chatDto.Title,
             IsDeleted = chatDto.IsDeleted,
+            ChatTgId = chatDto.ChatTgId
         };
 
         await _chatRepository.InsertChat(newChat);
     }
 
-    private async Task EnableChat(ChatEntity existingChat)
+    private async Task RecoverChat(ChatEntity existingChat)
     {
+        if (!existingChat.IsDeleted)
+            return;
         existingChat.IsDeleted = false;
         await _chatRepository.UpdateChat(existingChat);
     }
@@ -57,5 +58,29 @@ internal class ChatManager(IChatRepository chatRepository, IChatTitleRepository 
             existingChat.Title = chatDto.Title;
             await _chatRepository.UpdateChat(existingChat);
         }
+    }
+
+    public Task SetCustomPromptToChat(ChatDto chatDto, string prompt) =>
+        _chatTitleRepository.SetAlternativePrompt(chatDto.ChatTgId, chatDto.Title, prompt);
+
+    public async Task<ChatDto?> GetChatById(long chatId)
+    {
+        var existingChat = await _chatRepository.GetChatById(chatId);
+        if (existingChat is not null)
+        {
+            var result = new ChatDto
+            {
+                ChatTgId = existingChat.ChatTgId,
+                Title = existingChat.Title,
+                CreatedDate = existingChat.CreatedDateTimeUtc,
+                IsDeleted = existingChat.IsDeleted
+            };
+            var chatTitle = await _chatTitleRepository.GetChatTitle(existingChat.Title, chatId);
+            if (chatTitle is not null)
+                result.AlternativePrompt = chatTitle.AlternativePrompt;
+
+            return result;
+        }
+        else return default;
     }
 }

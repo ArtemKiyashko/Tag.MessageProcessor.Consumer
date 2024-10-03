@@ -16,20 +16,22 @@ public static class CommandParser
     {
         if (tgMessage is null)
             return default;
+
+        if (!string.IsNullOrEmpty(tgMessage.NewChatTitle))
+            return new TgCommand(TgCommandTypes.NewTitle, null, tgMessage.NewChatTitle);
+
         var commandRawTuple = tgMessage.GetMessageCommandRaw(botName);
         if (!commandRawTuple.HasValue)
             return default;
-        
+
         if (tgMessage.Chat.Type == ChatType.Private || tgMessage.Chat.Type == ChatType.Sender)
             return new TgCommand(TgCommandTypes.PrivateChat, commandRawTuple.Value.name, commandRawTuple.Value.arguments);
 
         var messageCommandType = GetMessageCommandType(commandRawTuple.Value.name);
 
-        return messageCommandType switch
-        {
-            TgCommandTypes.NewChat => new TgCommand(messageCommandType, commandRawTuple.Value.name, commandRawTuple.Value.arguments),
-            _ => default,
-        };
+        return messageCommandType == TgCommandTypes.Unknown ? 
+            default : 
+            new TgCommand(messageCommandType, commandRawTuple.Value.name, commandRawTuple.Value.arguments);
     }
 
     public static (string name, string arguments)? GetMessageCommandRaw(this Message tgMessage, string botName)
@@ -49,7 +51,7 @@ public static class CommandParser
         var argumentsSpan = tgMessage.Text.AsSpan(botCommand.Offset + botCommand.Length);
 
         return (
-            commandNameSegments[0], 
+            commandNameSegments[0],
             argumentsSpan.ToString().Trim());
     }
 
@@ -57,6 +59,7 @@ public static class CommandParser
     {
         "/start" => TgCommandTypes.NewChat,
         "/generate" => TgCommandTypes.GenerateAvatar,
+        "/prompt" => TgCommandTypes.CustomPrompt,
         _ => TgCommandTypes.Unknown
     };
 }

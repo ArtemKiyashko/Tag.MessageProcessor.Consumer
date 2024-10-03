@@ -6,7 +6,7 @@ public class ChatOptions
 {
     public Uri? ServiceUri { get; set; }
     public string? TableConnectionString { get; set; }
-    public string ChatTable { get; set; } = "chats";
-    public string ChatTitleTable { get; set; } = "chattitles";
+    public string ChatTable { get; set; } = "tagchats";
+    public string ChatTitleTable { get; set; } = "tagchattitles";
 
 }

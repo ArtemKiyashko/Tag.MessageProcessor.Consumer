@@ -1,19 +1,32 @@
-using System;
 using Azure.Data.Tables;
+using Tag.MessageProcessor.Helpers.Extensions;
+using Tag.MessageProcessor.Repositories.Entities;
 
 namespace Tag.MessageProcessor.Repositories;
 
-internal class ChatTitleRepository : IChatTitleRepository
+internal class ChatTitleRepository(TableClient tableClient) : IChatTitleRepository
 {
-    private readonly TableClient _tableClient;
+    private readonly TableClient _tableClient = tableClient;
 
-    public ChatTitleRepository(TableClient tableClient)
+    public async Task<ChatTitleEntity?> GetChatTitle(string title, long chatId)
     {
-        _tableClient = tableClient;
+        var (rowKey, partitionKey) = HashExtensions.GetEntityKeyData(title, chatId);
+        var existingChatTitle = await _tableClient.GetEntityIfExistsAsync<ChatTitleEntity>(partitionKey, rowKey);
+        return existingChatTitle.HasValue && !existingChatTitle.Value.Disabled ? existingChatTitle.Value : default;
     }
 
-    public Task SetAlternativePrompt(long chatId, string title, string prompt)
+    public async Task SetAlternativePrompt(long chatId, string title, string prompt)
     {
-        throw new NotImplementedException();
+        var (rowKey, partitionKey) = HashExtensions.GetEntityKeyData(title, chatId);
+        var chatTitleEntity = new ChatTitleEntity
+        {
+            RowKey = rowKey,
+            PartitionKey = partitionKey,
+            Title = title,
+            AlternativePrompt = prompt,
+            ChatId = chatId
+        };
+
+        await _tableClient.UpsertEntityAsync(chatTitleEntity, TableUpdateMode.Merge);
     }
 }
