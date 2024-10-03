@@ -14,13 +14,13 @@ public static class ServiceCollectionExtensions
         services.AddAzureClients(clientBuilder =>
         {
             clientBuilder.UseCredential(new ManagedIdentityCredential());
-            if (chatOptions.ServiceUri is not null)
-                clientBuilder.AddTableServiceClient(chatOptions.ServiceUri);
+            if (chatOptions.TablesServiceUri is not null)
+                clientBuilder.AddTableServiceClient(chatOptions.TablesServiceUri);
             else
             {
-                if (string.IsNullOrEmpty(chatOptions.TableConnectionString))
-                    throw new ArgumentException($"{nameof(chatOptions.ServiceUri)} or {nameof(chatOptions.TableConnectionString)} required");
-                clientBuilder.AddTableServiceClient(chatOptions.TableConnectionString);
+                if (string.IsNullOrEmpty(chatOptions.TablesConnectionString))
+                    throw new ArgumentException($"{nameof(chatOptions.TablesServiceUri)} or {nameof(chatOptions.TablesConnectionString)} required");
+                clientBuilder.AddTableServiceClient(chatOptions.TablesConnectionString);
             }
         });
 
