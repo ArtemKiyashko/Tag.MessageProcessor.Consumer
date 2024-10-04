@@ -6,6 +6,7 @@ using Tag.MessageProcessor.Managers;
 using Tag.MessageProcessor.Managers.Extensions;
 using Telegram.Bot;
 using Microsoft.Extensions.Logging;
+using Tag.MessageProcessor.Consumer;
 
 IConfiguration _functionConfig;
 ChatOptions _chatOptions = new();
@@ -31,6 +32,8 @@ var host = new HostBuilder()
             return new TelegramBotClient(botToken);
         });
         services.AddGenerateRequestManager(_generateRequestOptions);
+
+        services.AddSingleton<ICommandHandlerFactory, CommandHandlerFactory>();
         //ref: https://github.com/devops-circle/Azure-Functions-Logging-Tests/blob/master/Func.Isolated.Net7.With.AI/Program.cs#L46
         services.Configure<LoggerFilterOptions>(options =>
         {
