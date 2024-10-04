@@ -60,6 +60,9 @@ namespace Tag.MessageProcessor.Consumer
                     case TgCommandTypes.RemoveChat:
                         await _chatManager.DeleteChat(chatDto.ChatTgId);
                         break;
+                    case TgCommandTypes.ChatMigrate:
+                        await _chatManager.MigrateChat(long.Parse(tgData.TgCommand.TgCommandArguments), tgData.ChatTgId);
+                        break;
                 }
             }
             catch (ApiRequestException ex) when (ex.ErrorCode == 403)

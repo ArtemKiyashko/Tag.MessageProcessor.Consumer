@@ -40,6 +40,12 @@ public static class CommandParser
     {
         if (tgMessage is null)
             return default;
+        
+        if (tgMessage.MigrateToChatId.HasValue)
+            return new TgData(
+                new TgCommand(TgCommandTypes.ChatMigrate, null, tgMessage.Chat.Id.ToString()),
+                tgMessage.Chat.Title,
+                tgMessage.MigrateToChatId.Value);
 
         if (!string.IsNullOrEmpty(tgMessage.NewChatTitle))
             return new TgData(

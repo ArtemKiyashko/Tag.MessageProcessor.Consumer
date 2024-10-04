@@ -69,12 +69,35 @@ internal class ChatManager(IChatRepository chatRepository, IChatTitleRepository 
                 CreatedDate = existingChat.CreatedDateTimeUtc,
                 IsDeleted = existingChat.IsDeleted
             };
-            var chatTitle = await _chatTitleRepository.GetChatTitle(existingChat.Title, chatId);
+            var chatTitle = await _chatTitleRepository.GetChatTitle(chatId, existingChat.Title);
             if (chatTitle is not null)
                 result.AlternativePrompt = chatTitle.AlternativePrompt;
 
             return result;
         }
         else return default;
+    }
+
+    public async Task MigrateChat(long fromId, long toId)
+    {
+        var oldChatTitles = await _chatTitleRepository.GetChatTitles(fromId);
+        var oldChat = await _chatRepository.GetChatById(fromId);
+
+        if (oldChat is null)
+            return;
+
+        foreach (var chatTitle in oldChatTitles)
+        {
+            await _chatTitleRepository.SetAlternativePrompt(toId, chatTitle.Title, chatTitle.AlternativePrompt);
+            await _chatTitleRepository.DeleteChatTitle(fromId, chatTitle.Title);
+        }
+        
+        var newChat = new ChatDto{
+            ChatTgId = toId,
+            Title = oldChat.Title
+        };
+
+        await InsertChat(newChat);
+        await DeleteChat(fromId);
     }
 }
