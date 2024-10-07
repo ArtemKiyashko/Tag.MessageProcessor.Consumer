@@ -19,7 +19,8 @@ internal class GenerateRequestManager(IChatManager chatManager, IGenerateRequest
             RequestType = GenerateRequestTypes.Enqueue,
             ChatTgId = chatDto.ChatTgId,
             ChatTitle = chatDto.Title,
-            AlternativePrompt = chatDto.AlternativePrompt
+            AlternativePrompt = chatDto.AlternativePrompt,
+            GenerationRequestedDateTime = DateTimeOffset.UtcNow
         };
 
         await _generateRequestRepository.SendRequest(requestEntity);
