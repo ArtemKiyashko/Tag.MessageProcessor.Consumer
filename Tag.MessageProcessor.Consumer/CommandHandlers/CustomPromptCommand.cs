@@ -13,13 +13,6 @@ public class CustomPromptCommand(IChatManager chatManager, IGenerateRequestManag
 
     public async Task ProcessCommand(TgData tgData)
     {
-        var currentChat = await _chatManager.GetChatById(tgData.ChatTgId);
-        if (currentChat is not null && !currentChat.Title.Equals(tgData.ChatTitle))
-        {
-            currentChat.Title = tgData.ChatTitle;
-            await _chatManager.UpdateChatTitle(currentChat);
-        }
-
         var chatDto = new ChatDto
         {
             ChatTgId = tgData.ChatTgId,

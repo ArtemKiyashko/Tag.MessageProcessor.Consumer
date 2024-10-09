@@ -1,3 +1,4 @@
+using Tag.MessageProcessor.Consumer.CommandDecorators;
 using Tag.MessageProcessor.Consumer.CommandHandlers;
 using Tag.MessageProcessor.Consumer.ViewModels;
 using Tag.MessageProcessor.Managers;
@@ -14,9 +15,9 @@ public class CommandHandlerFactory(IChatManager chatManager, IGenerateRequestMan
     public ICommandHandler? GetCommandHandler(TgCommandTypes commandType) => commandType switch {
         TgCommandTypes.NewChat => new NewChatCommand(_chatManager, _generateRequestManager, _telegramBotClient),
         TgCommandTypes.NewTitle => new NewTitleCommand(_chatManager, _generateRequestManager, _telegramBotClient),
-        TgCommandTypes.CustomPrompt => new CustomPromptCommand(_chatManager, _generateRequestManager, _telegramBotClient),
+        TgCommandTypes.CustomPrompt => new TitleCheckDecorator(new CustomPromptCommand(_chatManager, _generateRequestManager, _telegramBotClient), _chatManager),
         TgCommandTypes.PrivateChat => new PrivateChatCommand(_telegramBotClient),
-        TgCommandTypes.GenerateAvatar => new GenerateCommand(_generateRequestManager, _telegramBotClient, _chatManager),
+        TgCommandTypes.GenerateAvatar => new TitleCheckDecorator(new GenerateCommand(_generateRequestManager, _telegramBotClient), _chatManager),
         TgCommandTypes.RemoveChat => new RemoveChatCommand(_chatManager),
         TgCommandTypes.ChatMigrate => new MigrateChatCommand(_chatManager),
         TgCommandTypes.UserMessage => new UserMessageCommand(_telegramBotClient, _chatManager, _generateRequestManager),
