@@ -16,9 +16,10 @@ public class CommandHandlerFactory(IChatManager chatManager, IGenerateRequestMan
         TgCommandTypes.NewTitle => new NewTitleCommand(_chatManager, _generateRequestManager, _telegramBotClient),
         TgCommandTypes.CustomPrompt => new CustomPromptCommand(_chatManager, _generateRequestManager, _telegramBotClient),
         TgCommandTypes.PrivateChat => new PrivateChatCommand(_telegramBotClient),
-        TgCommandTypes.GenerateAvatar => new GenerateCommand(_generateRequestManager, _telegramBotClient),
+        TgCommandTypes.GenerateAvatar => new GenerateCommand(_generateRequestManager, _telegramBotClient, _chatManager),
         TgCommandTypes.RemoveChat => new RemoveChatCommand(_chatManager),
         TgCommandTypes.ChatMigrate => new MigrateChatCommand(_chatManager),
+        TgCommandTypes.UserMessage => new UserMessageCommand(_telegramBotClient, _chatManager, _generateRequestManager),
         _ => default
     };
 }

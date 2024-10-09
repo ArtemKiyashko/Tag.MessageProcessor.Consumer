@@ -55,7 +55,10 @@ public static class CommandParser
 
         var commandTuple = tgMessage.GetMessageCommand(botName);
         if (!commandTuple.HasValue)
-            return default;
+            return new TgData(
+                new TgCommand(TgCommandTypes.UserMessage, tgMessage.Text, null),
+                tgMessage.Chat.Title,
+                tgMessage.Chat.Id);
 
         if (tgMessage.Chat.Type == ChatType.Private || tgMessage.Chat.Type == ChatType.Sender)
             return new TgData(

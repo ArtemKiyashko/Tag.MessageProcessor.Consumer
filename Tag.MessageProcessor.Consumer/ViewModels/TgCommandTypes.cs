@@ -9,5 +9,6 @@ public enum TgCommandTypes
     NewTitle,
     PrivateChat,
     CustomPrompt,
-    ChatMigrate
+    ChatMigrate,
+    UserMessage
 }
