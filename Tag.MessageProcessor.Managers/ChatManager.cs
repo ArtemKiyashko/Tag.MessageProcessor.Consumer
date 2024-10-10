@@ -100,4 +100,19 @@ internal class ChatManager(IChatRepository chatRepository, IChatTitleRepository 
         await InsertChat(newChat);
         await DeleteChat(fromId);
     }
+
+    public async Task<IEnumerable<ChatDto>> GetAllChats()
+    {
+        var chatEntities = await _chatRepository.GetAllChats();
+        var result = new List<ChatDto>(chatEntities.Count());
+        foreach (var chatEntity in chatEntities)
+        {
+            if (!chatEntity.IsDeleted)
+                result.Add(new ChatDto{
+                    Title = chatEntity.Title,
+                    ChatTgId = chatEntity.ChatTgId
+                });
+        }
+        return result;
+    }
 }

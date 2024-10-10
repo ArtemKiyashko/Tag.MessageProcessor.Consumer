@@ -10,4 +10,5 @@ internal interface IChatRepository
     Task UpsertChat(ChatEntity chatEntity);
     Task UpdateChat(ChatEntity chatEntity);
     Task InsertChat(ChatEntity chatEntity);
+    Task <IEnumerable<ChatEntity>> GetAllChats();
 }

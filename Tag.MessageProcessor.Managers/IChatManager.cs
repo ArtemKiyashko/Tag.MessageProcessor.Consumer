@@ -10,4 +10,5 @@ public interface IChatManager
     Task SetCustomPromptToChat(ChatDto chatDto, string prompt);
     Task<ChatDto?> GetChatById(long chatId);
     Task MigrateChat(long fromId, long toId);
+    Task<IEnumerable<ChatDto>> GetAllChats();
 }

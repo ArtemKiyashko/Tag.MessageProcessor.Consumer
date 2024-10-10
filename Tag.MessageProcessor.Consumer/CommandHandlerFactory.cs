@@ -20,7 +20,6 @@ public class CommandHandlerFactory(IChatManager chatManager, IGenerateRequestMan
         TgCommandTypes.GenerateAvatar => new TitleCheckDecorator(new GenerateCommand(_generateRequestManager, _telegramBotClient), _chatManager),
         TgCommandTypes.RemoveChat => new RemoveChatCommand(_chatManager),
         TgCommandTypes.ChatMigrate => new MigrateChatCommand(_chatManager),
-        TgCommandTypes.UserMessage => new UserMessageCommand(_telegramBotClient, _chatManager, _generateRequestManager),
         _ => default
     };
 }

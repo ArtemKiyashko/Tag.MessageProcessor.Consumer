@@ -8,6 +8,16 @@ internal class ChatRepository(TableClient tableClient) : IChatRepository
 {
     private readonly TableClient _tableClient = tableClient;
 
+    public async Task<IEnumerable<ChatEntity>> GetAllChats()
+    {
+        var result = new List<ChatEntity>();
+        var queryResponse = _tableClient.QueryAsync<ChatEntity>();
+        await foreach (var chatEntity in queryResponse)
+            if (!chatEntity.Disabled)
+                result.Add(chatEntity);
+        return result;
+    }
+
     public async Task<ChatEntity?> GetChatById(long id)
     {
         var (rowKey, partitionKey) = HashExtensions.GetEntityKeyData(id);
